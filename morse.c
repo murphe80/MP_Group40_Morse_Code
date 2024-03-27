@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "morse.h"
 #include "string.h"
 // #include "pico/stdlib.h"
@@ -9,7 +10,7 @@
 #define MAX_ENCODING_LENGTH 6
 #define ALPHABET_START 'A'
 #define NUM_START '0'
-#define TABLE_LENGTH 28
+#define TABLE_LENGTH 36
 #define ALPHABET_LENGTH 26
 
 // Defining all morse encodings for each letter
@@ -40,15 +41,26 @@ char morse_x[] = "-..-";
 char morse_y[] = "-.--";
 char morse_z[] = "--..";
 
+char level_0[] = "-----";
 char level_1[] = ".----";
 char level_2[] = "..---";
+char level_3[] = "...--";
+char level_4[] = "....-";
+char level_5[] = ".....";
+char level_6[] = "-....";
+char level_7[] = "--...";
+char level_8[] = "---..";
+char level_9[] = "----.";
+
 
 // Array of morse encodings for each letter
 char *morse_table[] = {morse_a, morse_b, morse_c, morse_d,
                        morse_e, morse_f, morse_g, morse_h, morse_i, morse_j, morse_k,
                        morse_l, morse_m, morse_n, morse_o, morse_p, morse_q, morse_r,
                        morse_s, morse_t, morse_u, morse_v, morse_w, morse_x, morse_y,
-                       morse_z, level_1, level_2};
+                       morse_z, level_0, level_1, level_2, level_3, level_4, level_5, 
+                       level_6, level_7, level_8, level_9};
+
 
 // TODO: Set up SDK functions to be used in Assembly code
 //  Declare the main assembly code entry point.
@@ -86,28 +98,68 @@ int main()
     // Decode level inputted by user
     char output[4096] = "";
     //get input from user
-    char input[4096] = "..---";
+    char input[4096] = "";
     int valid_level = 0;
-    // if(fgets(input, sizeof(input), stdin) != NULL){
+    if(fgets(input, sizeof(input), stdin) != NULL){
+        //remove newline character at end of input
+        int size = strlen(input);
+        char endChar = input[size-1]; 
+        if(endChar == '\n') input[size-1] = '\0';
         //call decode function 
         valid_level = decodeMorse(input, output);
-    // } 
+    } 
     //Call level depending on which selected
     //First check if valid level selected 
-    if(valid_level != 0){
-        if((int)'0' == (int)output[0]){
-            printf("You have selected level 1!\n"); 
+    if(valid_level == 0){
+
+        int lives_remaining = 5;
+
+        if((int)'1' == (int)output[0]){
+            
+            printf("\nYou have selected level 1!\n\n"); 
+            printf("At this level, characters with their equivalent morse code is provided. \n"); 
+            //while lives left, repeat
+            int game_number = 0; 
+            while(lives_remaining > 0 && game_number < 5){
+                int correct_answer = level1_game();
+                if(!correct_answer) lives_remaining--;
+                game_number++; 
+            }  
+            if(lives_remaining > 0){
+                printf("**********************************************************\n");
+                printf("Congratulations, you have progressed to level 2!\n\n");
+                game_number=0;
+                while(lives_remaining>0 && game_number < 5){
+                    int correct_answer = level2_game();
+                    if(!correct_answer) lives_remaining--;
+                    game_number++; 
+                }
+            }
+            if(lives_remaining > 0) YouWinMessage();
+            else GameOverMessage();
         }
-        else{
-            printf("You have selected level 2!\n"); 
+
+        else if((int)'2' == (int)output[0]){
+            printf("\nYou have selected level 2!\n\n"); 
+            printf("At this level, characters without their equivalent morse code is provided. \n"); 
+            //while lives left, repeat
+            int game_number = 0; 
+            while(lives_remaining > 0 && game_number < 5){
+                int correct_answer = level2_game();
+                if(!correct_answer) lives_remaining--;
+                game_number++; 
+            } 
+            if(lives_remaining>0) YouWinMessage();
+            else GameOverMessage();
         }
     }
+    else printf("Error: Invalid level selected! \n");
+
     //  main_asm(); // Jump into the ASM code
 }
 
 int welcomeMessage()
 {
-
     // Print welcome message
     printf("\n\n");
     printf("**********************************************************\n\n");
@@ -129,6 +181,75 @@ int welcomeMessage()
     printf("To start the game on level 2, enter ..---\n\n");
     printf("**********************************************************\n");
     printf("Enter level: \n");
+    return 0;
+}
+
+int GameOverMessage(){
+    printf("**********************************************************\n\n");
+    printf("GAME OVER!\n"); 
+    printf("**********************************************************\n");
+    return 0;
+}
+
+int YouWinMessage(){
+    printf("**********************************************************\n\n");
+    printf("YOU WIN!\n"); 
+    printf("**********************************************************\n");
+    return 0;
+}
+
+int level1_game(){
+    //Display character at random 
+    int random_index = rand() % TABLE_LENGTH;
+    char* rand_character = morse_table[random_index];
+    char decoded[4096] = "";
+    //decode string 
+    if(decodeMorse(rand_character, decoded) == 0){
+        printf("Write the equivalent morse code for the character '%s'\n", decoded);
+        printf("The morse code for the above character is %s\n\n", rand_character);
+    }
+
+    //await input from buttons 
+    char input[4096] = "";
+    char decode_input[4096] = "";
+    //check if input is correct 
+    if(decodeMorse(input, decode_input) == 0){
+        if(strcmp(decode_input, decoded) == 0){
+            printf("Well done, that is correct!\n");
+            return 1;
+        } 
+    }
+    else{
+        printf("Incorrect, try again on the next one!");
+        return 0;
+    } 
+    return 0; 
+}
+
+int level2_game(){
+    //Display character at random 
+    int random_index = rand() % TABLE_LENGTH;
+    char* rand_character = morse_table[random_index];
+    char decoded[4096] = "";
+    //decode string 
+    if(decodeMorse(rand_character, decoded) == 0){
+        printf("Write the equivalent morse code for the character '%s'\n", decoded);
+    }
+
+    //await input from buttons 
+    char input[4096] = "";
+    char decode_input[4096] = "";
+    //check if input is correct 
+    if(decodeMorse(input, decode_input) == 0 && strcmp(decoded, decode_input)){
+        if(strcmp(decode_input, decoded) == 0){
+            printf("Well done, that is correct!\n");
+            return 1;
+        } 
+    }
+    else{
+        printf("Incorrect, try again on the next one!");
+        return 0;
+    } 
     return 0;
 }
 
@@ -170,7 +291,7 @@ int decodeMorse(char input[], char output[])
                 if (encodingIndex >= TABLE_LENGTH)
                 {
                     printf("No such morse code exists\n");
-                    return 0;
+                    return -1;
                 }
             }
             // translate to ASCII equivalent 
@@ -187,6 +308,6 @@ int decodeMorse(char input[], char output[])
     }
     // null terminate the string
     output[strlen(output)] = '\0';
-    return 1; 
+    return 0; 
 }
 
