@@ -1,7 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "morse.h"
-#include "string.h"
+#include <string.h>
+#include "pico/stdlib.h"
+#include "hardware/clocks.h"
+#include "hardware/watchdog.h"
+#include <time.h>
+
+#define IS_RGBW true                // Will use RGBW format
+#define NUM_PIXELS 1                // There is 1 WS2812 device in the chain
+#define WS2812_PIN 28               // The GPIO pin that the WS2812 connected to
+#define ARRAY_SIZE 173
+
+
+
 // #include "pico/stdlib.h"
 // #include "hardware/gpio.h"
 
@@ -62,30 +73,108 @@ char *morse_table[] = {morse_a, morse_b, morse_c, morse_d,
                        level_6, level_7, level_8, level_9};
 
 
-// TODO: Set up SDK functions to be used in Assembly code
-//  Declare the main assembly code entry point.
-//  void main_asm();
-//  // Initialise a GPIO pin – see SDK for detail on gpio_init()
-//  void asm_gpio_init(uint pin) {
-//   gpio_init(pin);
-//  }
-//  // Set direction of a GPIO pin – see SDK for detail on gpio_set_dir()
-//  void asm_gpio_set_dir(uint pin, bool out) {
-//   gpio_set_dir(pin, out);
-//  }
-//  // Get the value of a GPIO pin – see SDK for detail on gpio_get()
-//  bool asm_gpio_get(uint pin) {
-//   return gpio_get(pin);
-//  }
-//  // Set the value of a GPIO pin – see SDK for detail on gpio_put()
-//  void asm_gpio_put(uint pin, bool value) {
-//   gpio_put(pin, value);
-//  }
+int correct_input = 0;
+int incorrect_input = 0;
 
-// // Enable falling-edge interrupt – see SDK for detail on gpio_set_irq_enabled()
-// void asm_gpio_set_irq(uint pin) {
-//  gpio_set_irq_enabled(pin, GPIO_IRQ_EDGE_FALL, true);
-// }
+
+absolute_time_t start_time; // for alarm timer
+
+char curr_input[200];
+int curr_index= -1;
+
+
+void timer_begin() {
+    start_time = get_absolute_time();
+}
+
+// This function returns an int which is the time elapsed of the alarm interupt when the button is pressed. 
+
+int timer_end()
+{
+    int endTime = (int) absolute_time_diff_us(start_time, get_absolute_time());
+    return endTime/100000;
+}
+
+// The add_input function is called on in many subroutines to add the input as a dot, dash, space, or null charcater.
+// It will also increment an index counter each time the function is called to keep track of how many characters are being added.   
+
+void add_input(int temp, int index)
+{
+    curr_index = curr_index - index;
+    if (curr_index < 200)
+    {
+        if (temp == 0)
+        {
+            curr_input[curr_index] = '.';
+        }
+        else if (temp == 1)
+        {
+            curr_input[curr_index] = '-';
+        }
+        else if (temp == 2)
+        {
+            curr_input[curr_index] = ' ';
+        }
+        else if(temp == 3)
+        {
+            curr_input[curr_index] = '\0';
+        }
+    }
+    curr_index +=  1;
+    if (index)
+    {
+        printf("\b%c",curr_input[curr_index-1]);
+    }
+    else printf("%c",curr_input[curr_index-1]);
+
+}
+
+
+void main_asm();
+
+
+// Initialise a GPIO pin
+
+void asm_gpio_init(uint pin)
+{
+    gpio_init(pin);
+}
+
+// Set direction of a GPIO pin
+
+void asm_gpio_set_dir(uint pin, bool out) 
+{
+    gpio_set_dir(pin, out);
+}
+
+
+// Get the value of a GPIO pin 
+
+bool asm_gpio_get(uint pin)
+{
+    return gpio_get(pin);
+}
+
+
+// Set the value of a GPIO pin
+
+void asm_gpio_put(uint pin, bool value) 
+{
+    gpio_put(pin, value);
+}
+
+
+// Set the falling and rising edge interrupts for the pin specified
+
+void asm_gpio_set_irq(uint pin)
+{
+    gpio_set_irq_enabled(pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
+}
+
+
+void enable_falling_edge_interrupt(uint pin) {
+    gpio_set_irq_enabled(pin, GPIO_IRQ_EDGE_FALL, true);
+}
 
 // Main entry point of the application
 int main()
@@ -94,7 +183,7 @@ int main()
 
     // Print welcome message
     welcomeMessage();
-
+    
     // Decode level inputted by user
     char output[4096] = "";
     //get input from user
@@ -310,4 +399,3 @@ int decodeMorse(char input[], char output[])
     output[strlen(output)] = '\0';
     return 0; 
 }
-
