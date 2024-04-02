@@ -1,0 +1,13 @@
+# Target labels
+ PioasmBuild
+# Source files and their labels
+/Users/emmamurphy/Desktop/pico-apps/build/pico-sdk/src/rp2_common/pico_cyw43_driver/CMakeFiles/PioasmBuild
+/Users/emmamurphy/Desktop/pico-apps/build/pico-sdk/src/rp2_common/pico_cyw43_driver/CMakeFiles/PioasmBuild.rule
+/Users/emmamurphy/Desktop/pico-apps/build/pico-sdk/src/rp2_common/pico_cyw43_driver/CMakeFiles/PioasmBuild-complete.rule
+/Users/emmamurphy/Desktop/pico-apps/build/pico-sdk/src/rp2_common/pico_cyw43_driver/pioasm/src/PioasmBuild-stamp/PioasmBuild-build.rule
+/Users/emmamurphy/Desktop/pico-apps/build/pico-sdk/src/rp2_common/pico_cyw43_driver/pioasm/src/PioasmBuild-stamp/PioasmBuild-configure.rule
+/Users/emmamurphy/Desktop/pico-apps/build/pico-sdk/src/rp2_common/pico_cyw43_driver/pioasm/src/PioasmBuild-stamp/PioasmBuild-download.rule
+/Users/emmamurphy/Desktop/pico-apps/build/pico-sdk/src/rp2_common/pico_cyw43_driver/pioasm/src/PioasmBuild-stamp/PioasmBuild-install.rule
+/Users/emmamurphy/Desktop/pico-apps/build/pico-sdk/src/rp2_common/pico_cyw43_driver/pioasm/src/PioasmBuild-stamp/PioasmBuild-mkdir.rule
+/Users/emmamurphy/Desktop/pico-apps/build/pico-sdk/src/rp2_common/pico_cyw43_driver/pioasm/src/PioasmBuild-stamp/PioasmBuild-patch.rule
+/Users/emmamurphy/Desktop/pico-apps/build/pico-sdk/src/rp2_common/pico_cyw43_driver/pioasm/src/PioasmBuild-stamp/PioasmBuild-update.rule
