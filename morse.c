@@ -367,8 +367,8 @@ void add_to_input(int character, int index)
 // initialise assembly program
 void main_asm();
 
-void get_start_time(){
-    start_time = time_us_64();
+void time_start(){
+    start_time = get_absolute_time();
 }
 
 void 
