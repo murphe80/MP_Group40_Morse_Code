@@ -29,9 +29,6 @@ char curr_input[200];
 int lives_remaining = 5; // lives remaining for user
 int game_start = 0;
 
-uint64_t start_time;
-uint64_t end_time;
-
 // Defining all morse encodings for each letter
 char morse_a[] = ".-";
 char morse_b[] = "-...";
@@ -79,6 +76,11 @@ char *morse_table[] = {morse_a, morse_b, morse_c, morse_d,
                        morse_z, level_0, level_1, level_2, level_3, level_4, level_5,
                        level_6, level_7, level_8, level_9};
 
+//function declaration 
+void main_asm();
+int decodeMorse(char input[], char output[]); 
+
+
 // timer functions
 void timer_begin()
 {
@@ -93,12 +95,12 @@ int timer_end()
 }
 
 // led configurations
-static inline void put_pixel(uint32_t pixel_grb)
+static inline void pixel_add(uint32_t pixel_grb)
 {
     pio_sm_put_blocking(pio0, 0, pixel_grb << 8u);
 }
 
-static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b)
+static inline uint32_t rgb_gen(uint8_t r, uint8_t g, uint8_t b)
 {
     return ((uint32_t)(r) << 8) |
            ((uint32_t)(g) << 16) |
@@ -107,32 +109,33 @@ static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b)
 
 void red_LED()
 {
-    put_pixel(urgb_u32(0x7F, 0x00, 0x00));
+    pixel_add(rgb_gen(0x7F, 0x00, 0x00));
 }
 
 void yellow_LED()
 {
-    put_pixel(urgb_u32(0x0F, 0x0F, 0x0F));
+    pixel_add(rgb_gen(0x0F, 0x0F, 0x0F));
 }
 
 void orange_LED()
 {
-    put_pixel(urgb_u32(0xFF, 0xA5, 0x00));
+    pixel_add(rgb_gen(0xFF, 0xA5, 0x00));
 }
 
 void green_LED()
 {
-    put_pixel(urgb_u32(0x00 0x7F, 0x00));
+    pixel_add(rgb_gen(0x00, 0x7F, 0x00));
 }
+
 
 void blue_LED()
 {
-    put_pixel(urgb_u32(0x00, 0x00, 0x7F));
+    pixel_add(rgb_gen(0x00, 0x00, 0x7F));
 }
 
 void off_LED()
 {
-    put_pixel(urgb_u32(0x00, 0x00, 0x00));
+    pixel_add(rgb_gen(0x00, 0x00, 0x00));
 }
 
 void change_led()
@@ -219,7 +222,7 @@ int level1_game()
     }
 
     // wait for entire input
-    curr_index = -1; // resetting index
+    currIndex = -1; // resetting index
     main_asm();
     char decode_input[200] = "";
     // check if input is correct
@@ -253,7 +256,7 @@ int level2_game()
     }
 
     // await input from buttons
-    curr_index = -1; // resetting index
+    currIndex = -1; // resetting index
     main_asm();
 
     char decode_input[4096] = "";
@@ -350,12 +353,18 @@ void add_to_input(int character, int index)
         {
             curr_input[currIndex] = '-';
         }
+        else if (character == 2)
+        {
+            curr_input[currIndex] = ' ';
+        }
+
         else if (character == 3)
         {
             curr_input[currIndex] = '\0';
         }
-        currIndex++;
+        
     }
+    currIndex++;
     if (index)
     {
         printf("\b%c", curr_input[currIndex - 1]);
@@ -364,14 +373,12 @@ void add_to_input(int character, int index)
         printf("%c", curr_input[currIndex - 1]);
 }
 
-// initialise assembly program
-void main_asm();
+
 
 void time_start(){
     start_time = get_absolute_time();
 }
 
-void 
 
 // Initialise a GPIO pin
 
@@ -413,11 +420,11 @@ void play_morse()
     game_start = 1;
     change_led();
     // resetting input array and index
-    curr_index = -1;
+    currIndex = -1;
     main_asm(); // calling assembly program
-
+    char decoded_level[200];
     // call decode function on input given by user
-    valid_level = decodeMorse(curr_input, decoded_level);
+    int valid_level = decodeMorse(curr_input, decoded_level);
 
     if (valid_level == 0)
     {
@@ -494,6 +501,7 @@ int main()
     stdio_init_all(); // Initialise all basic IO
 
     PIO pio = pio0;
+    uint offset = pio_add_program(pio, &ws2812_program);
     ws2812_program_init(pio, 0, offset, WS2812_PIN, 800000, IS_RGBW);
     watchdog_enable(0x7fffff, 1);
     // Print welcome message
@@ -502,3 +510,5 @@ int main()
     // call learn morse program
     play_morse();
 }
+
+

@@ -3,6 +3,7 @@
 #include "hardware/regs/timer.h"
 #include "hardware/regs/m0plus.h"
 
+
 .syntax unified
 .cpu    cortex-m0plus
 .thumb
@@ -25,7 +26,7 @@
 main_asm:
         push     {lr}          
         bl      init_gpio_buttons       @ Initialise the GPIO buttons
-        bl      init_gpio_led           @Initalise LED
+        @ bl      init_gpio_led           @Initalise LED
         bl      install_gpio_isr        @install isr for the gpio buttons
         bl      install_alarm_isr         @install alarm
 
@@ -45,7 +46,7 @@ main_loop:
         str     r0, [r2]                                                
         movs    r0, #3                                                  
         movs    r1, #0                                                  
-        bl      add_input                                               
+        bl      add_to_input                                               
         pop     {pc}                                                    
 
 
@@ -97,7 +98,7 @@ alarm_isr:
         movs    r1, #1
         str     r1, [r2, #TIMER_INTR_OFFSET]
         @Check state of LED to determine next action
-        ldr     r2 =ltimer    @current state of the led (if flashing or not)
+        ldr     r2, =ltimer    @current state of the led (if flashing or not)
         movs    r0, #1                              
         str     r0, [r2]                @ put 1 in alarm timer                           
         pop     {pc}        
@@ -142,7 +143,7 @@ gpio_isr:
     ldr     r2, =GPIO_BTN_FALL_MSK    @load up mask to r2
     cmp     r1, r2                  @if bit was present in r0 and in the mask then up button was pressed
     beq     fallingEdge         @perform the action done when up is pressed
-    interrput_end:
+    interrupt_end:
     bl      timer_begin
     pop     {pc}
 
@@ -160,7 +161,7 @@ risingEdge:
 
 fallingEdge:						           @ Subroutine to distinguish a dot or space when putton is pressed
     ldr     r2, =(IO_BANK0_BASE + IO_BANK0_INTR2_OFFSET)           @ Get the address of the INTR Register 2
-    ldr     r1, =GPIO_BUTTON_DOWN_MSK                              @ Get the mask for GP21 Falling Edge
+    ldr     r1, =GPIO_BTN_FALL_MSK                              @ Get the mask for GP21 Falling Edge
     str     r1, [r2]                                               @ Reset the GPIO ISR for GP21 Falling Edge
     bl      timer_end                                              @ Calls on c funtion end timer to return time elapsed                              
     movs    r1, #1                                                 @ Stores time elapsed from timer(1 - 1 second)
@@ -174,19 +175,19 @@ dash:
     movs    r0, #1    
     movs    r1, #1
     bl      add_to_input
-    b       interrput_end
+    b       interrupt_end
     
 dot:
     movs    r0, #0    
     movs    r1, #1
     bl      add_to_input
-    b       interrput_end
+    b       interrupt_end
 
-space:
+add_space:
     movs    r0, #2    
     movs    r1, #0
     bl      add_to_input
-    b       interrput_end    
+    b       interrupt_end    
     
 
     
@@ -203,6 +204,7 @@ init_gpio_buttons:
         movs     r0, #GPIO_BTN       @ Button pin value (21)
         bl      asm_gpio_set_irq
         pop     {pc}               @Pop Link Register to return to where routine is called
+
 
 .align 4
 message:    .asciz "enter your input %d\n"
