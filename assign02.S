@@ -23,16 +23,32 @@
 
 @ Entry point to the ASM portion of the program
 main_asm:
+        push     {lr}          
         bl      init_gpio_buttons       @ Initialise the GPIO buttons
         bl      init_gpio_led           @Initalise LED
         bl      install_gpio_isr        @install isr for the gpio buttons
         bl      install_alarm_isr         @install alarm
-main_loop:
-        ldr     r0, =ltimer
-        ldr     r0, [r0]
-        bl      set_alarm0
-        wfi
-        b       main_loop
+
+        ldr      r0, =message                         
+        bl       printf                         
+        wfi           
+
+main_loop:                         
+        bl      set_alarm0                                            
+        wfi					                                            
+        ldr     r2, =ltimer                                        
+        ldr     r1, [r2]                                                
+        movs    r0, #1                                                  
+        cmp     r0, r1                                                  
+        bne     main_loop                                                      
+        movs    r0, #0                                                  
+        str     r0, [r2]                                                
+        movs    r0, #3                                                  
+        movs    r1, #0                                                  
+        bl      add_input                                               
+        pop     {pc}                                                    
+
+
 
 set_alarm0:
         @ Set's the next alarm on alarm 0
@@ -81,7 +97,7 @@ alarm_isr:
         movs    r1, #1
         str     r1, [r2, #TIMER_INTR_OFFSET]
         @Check state of LED to determine next action
-        ldr     r2 =DFLT_ALARM_TIME    @current state of the led (if flashing or not)
+        ldr     r2 =ltimer    @current state of the led (if flashing or not)
         movs    r0, #1                              
         str     r0, [r2]                @ put 1 in alarm timer                           
         pop     {pc}        
@@ -188,33 +204,9 @@ init_gpio_buttons:
         bl      asm_gpio_set_irq
         pop     {pc}               @Pop Link Register to return to where routine is called
 
-@ Subroutine to toggle the LED GPIO pin value
-sub_toggle:
-        push    {lr}                        @ Store the link register to the stack as we will call nested subroutines
-        ldr     r0, =blink_msg
-        bl      printf
-        movs    r0, #GPIO_LED_PIN           @ Set the LED GPIO pin number to r0 for use by asm_gpio_get
-        bl      asm_gpio_get                @ Get current the value of the LED GPIO pin (returns to r0)
-        cmp     r0, #LED_VAL_OFF          @ Check if the LED GPIO pin value is "off"
-        beq     led_set_on                  @ If it is "off" then then jump code to to turn it on
-led_set_off:
-        movs    r1, #LED_VAL_OFF          @ The LED is currently "on" so we want to turn it "off"
-        b       led_set_state               @ Jump to portion of code where we set the state of the LED
-led_set_on:
-         movs    r1, #LED_VAL_ON           @ The LED is currently "off" so we want to turn it "on"
-led_set_state:
-        movs    r0, #GPIO_LED_PIN           @ Set the LED GPIO pin number to r0 for use by asm_gpio_put
-        bl      asm_gpio_put                @ Update the the value of the LED GPIO pin (based on value in r1)
-        pop     {pc}                        @ Pop the link register from the stack to the program counter
-
-
 .align 4
-msg:    .asciz "Count %d\n"
-increase_msg:    .asciz "Interval doubled\n"
-decrease_msg:    .asciz "Interval Halved \n"
-reset_msg:    .asciz "Interval Reset\n"
-blink_msg:    .asciz "Blink \n"
-toggle_msg:    .asciz "Blink Toggled\n"
+message:    .asciz "enter your input %d\n"
+
 
 .data
 lstate: .word   DFLT_STATE_STRT
