@@ -131,17 +131,17 @@ install_gpio_isr:
 gpio_isr:
      @Read status from the (IO_BANK0_BASE + IO_BANK0_PROC0_INTS2_OFFSET) register
     push    {lr}
-    ldr     r0, =(IO_BANK0_BASE + IO_BANK0_PROC0_INTS2_OFFSET)
-    ldr     r1, [r0]                
+    ldr     r2, =(IO_BANK0_BASE + IO_BANK0_PROC0_INTS2_OFFSET)
+    ldr     r1, [r2]                
 
     @enter check
-    ldr     r2, =GPIO_BTN_RISE_MSK    @load enable mask to r2
-    cmp     r1, r2                  @if bit was present in r0 and in the mask then enter button was pressed
+    ldr     r0, =GPIO_BTN_RISE_MSK    @load enable mask to r2
+    cmp     r0, r1                  @if bit was present in r0 and in the mask then enter button was pressed
     beq     risingEdge      @perform the action done when enter is pressed
    
     @up check
-    ldr     r2, =GPIO_BTN_FALL_MSK    @load up mask to r2
-    cmp     r1, r2                  @if bit was present in r0 and in the mask then up button was pressed
+    ldr     r0, =GPIO_BTN_FALL_MSK    @load up mask to r2
+    cmp     r0, r1                  @if bit was present in r0 and in the mask then up button was pressed
     beq     fallingEdge         @perform the action done when up is pressed
     interrupt_end:
     bl      timer_begin
@@ -198,9 +198,7 @@ init_gpio_buttons:
         @Button
         movs    r0, #GPIO_BTN       @ This value is the GPIO button pin on the PI PICO board
         bl      asm_gpio_init           @  Call the subroutine to initialise the GPIO pin specified by r0
-        movs     r0, #GPIO_BTN       @ Button pin value (21)
-        movs     r1, #GPIO_DIR_IN       @ Input value (0)
-        bl      asm_gpio_set_dir        @ Call the subroutine to set the GPIO button specified by r0 to state specified by r1
+
         movs     r0, #GPIO_BTN       @ Button pin value (21)
         bl      asm_gpio_set_irq
         pop     {pc}               @Pop Link Register to return to where routine is called
