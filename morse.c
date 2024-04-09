@@ -87,7 +87,7 @@ void timer_begin() {
     start_time = get_absolute_time();
 }
 
-// This function returns an int which is the time elapsed of the alarm interupt when the button is pressed. 
+// This function returns an int which is the time elapsed of the alarm interrupt when the button is pressed. 
 
 int timer_end()
 {
@@ -95,7 +95,7 @@ int timer_end()
     return endTime/100000;
 }
 
-// The add_input function is called on in many subroutines to add the input as a dot, dash, space, or null charcater.
+// The add_input function is called on in many subroutines to add the input as a dot, dash, space, or null character.
 // It will also increment an index counter each time the function is called to keep track of how many characters are being added.   
 
 void add_input(int temp, int index)
